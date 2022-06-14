@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-import celery
+import celery.app.amqp
 
 from tornado import ioloop
 

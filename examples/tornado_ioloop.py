@@ -1,4 +1,4 @@
-import tasks
+from . import tasks
 import tcelery
 
 from tornado import ioloop

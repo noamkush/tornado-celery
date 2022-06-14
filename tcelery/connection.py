@@ -1,9 +1,6 @@
 from __future__ import absolute_import
 
-try:
-    from urlparse import urlparse
-except ImportError:  # py3k
-    from urllib.parse import urlparse
+from urllib.parse import urlparse
 from functools import partial
 from itertools import cycle
 from datetime import timedelta
@@ -46,7 +43,7 @@ class Connection(object):
         params = pika.ConnectionParameters(**self.options)
         try:
             TornadoConnection(
-                params, stop_ioloop_on_close=False,
+                params,
                 on_open_callback=partial(self.on_connect, callback),
                 on_close_callback=partial(self.on_closed, callback=callback),
                 custom_ioloop=self.io_loop)
@@ -59,7 +56,7 @@ class Connection(object):
 
     def on_connect(self, callback, connection):
         self.connection = connection
-        self.connection.channel(partial(self.on_channel_open, callback))
+        self.connection.channel(on_open_callback=partial(self.on_channel_open, callback))
 
     def on_channel_open(self, callback, channel):
         self.channel = channel
@@ -72,20 +69,19 @@ class Connection(object):
     def on_basic_cancel(self, frame):
         self.connection.close()
 
-    def on_closed(self, connection, reply_code, reply_text, callback=None):
+    def on_closed(self, connection, exception, callback=None):
         """This method is invoked by pika when the connection to RabbitMQ is
         closed unexpectedly. Since it is unexpected, we will reconnect to
         RabbitMQ if it disconnects.
 
         :param pika.connection.Connection connection: The closed connection obj
-        :param int reply_code: The server provided reply_code if given
+        :param int exception: The exception instance
         :param str reply_text: The server provided reply_text if given
 
         """
         self._channel = None
-        logging.warning('Connection closed, reopening in 5 seconds: (%s) %s',
-                        reply_code, reply_text)
-        connection.add_timeout(5, partial(self.connect, callback=callback))
+        logging.warning('Connection closed, reopening in 5 seconds: %s', exception)
+        self.io_loop.call_later(5, partial(self.connect, callback=callback))
 
     def publish(self, body, exchange=None, routing_key=None,
                 mandatory=False, immediate=False, content_type=None,

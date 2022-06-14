@@ -7,18 +7,10 @@ from kombu import serialization
 from kombu.utils import cached_property
 from kombu import common
 
-try:
-    from celery.app.amqp import TaskProducer
-except ImportError:
-    # celery version 4.0+
-    from kombu import Producer as TaskProducer
+from kombu import Producer as TaskProducer
 from celery.backends.amqp import AMQPBackend
 from celery.backends.redis import RedisBackend
-try:
-    from celery.utils import timeutils
-except ImportError:
-    # celery version 4.0+
-    from celery.utils import time as timeutils
+from celery.utils import time as timeutils
 from .result import AsyncResult
 
 

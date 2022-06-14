@@ -4,7 +4,7 @@ from __future__ import with_statement
 from datetime import timedelta
 from functools import partial
 
-from tornado import web
+from tornado import web, gen
 from tornado import ioloop
 from tornado.escape import json_decode
 
@@ -171,7 +171,7 @@ Revoke a task
 
 @route('/apply/(.*)/')
 class ApplyHandler(ApplyHandlerBase):
-    @web.asynchronous
+    @gen.coroutine
     def post(self, taskname):
         """
 Apply tasks synchronously. Function returns when the task is finished
